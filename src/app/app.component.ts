@@ -30,6 +30,8 @@ export class AppComponent {
   segmentCount = 0
   progressValue = 0
   progressText = ""
+  df: IDataFrame<number, any> = new DataFrame()
+  finished = false
   constructor(private fb: FormBuilder, public dialog: MatDialog) {
 
   }
@@ -75,6 +77,7 @@ export class AppComponent {
   }
 
   submit() {
+    this.finished = false
     this.uniprotIDs = []
 
     switch (this.currentTab) {
@@ -126,7 +129,22 @@ export class AppComponent {
       // get unique values
       this.uniprotIDs = [...new Set(this.uniprotIDs)]
       this.segmentCount = Math.ceil(this.uniprotIDs.length/10000)
-      this.parse().then()
+      this.parse().then(async () => {
+        if (this.currentTab === 0 || this.currentTab === 1) {
+          this.finished = true
+          await this.triggerDownload(this.df)
+        } else {
+          const total = this.multiColumnFile.join(
+            this.df, left => left["primaryID"], right => right["From"], (left, right) => {
+              return {
+                ...left,
+                ...right
+              }
+            }).bake()
+          this.finished = true
+          await this.triggerDownload(total)
+        }
+      })
     }
 
 
@@ -150,14 +168,13 @@ export class AppComponent {
       this.segmentStatus[segment].progressValue = this.segmentStatus[segment].currentRun * 100/this.segmentStatus[segment].totalRun
       this.segmentStatus[segment].progressText = `Processed UniProt Job ${this.segmentStatus[segment].currentRun}/${this.segmentStatus[segment].totalRun}`
       this.segmentStatus[segment].currentRun ++
-      console.log(this.segmentStatus[segment])
     }
     let finDF: IDataFrame<number, any> = new DataFrame()
     if (mainDF.length > 1) {
-      finDF = DataFrame.concat(mainDF).bake()
+      this.df = DataFrame.concat(mainDF).bake()
     } else {
       if (mainDF.length === 1) {
-        finDF = mainDF[0]
+        this.df = mainDF[0]
       } else {
 
       }
@@ -165,23 +182,9 @@ export class AppComponent {
     this.progressText = "Finished"
     this.segments = []
 
-
-    if (this.currentTab === 0 || this.currentTab === 1) {
-      await this.triggerDownload(finDF)
-    } else {
-      const total = this.multiColumnFile.join(
-        finDF, left => left["primaryID"], right => right["From"], (left, right) => {
-          return {
-            ...left,
-            ...right
-          }
-        }).bake()
-      await this.triggerDownload(total)
-    }
-
   }
 
-  async triggerDownload(finDF: IDataFrame<number, any>) {
+  async triggerDownload(finDF: IDataFrame<number, any>, filename: string = "uniprot.txt"  ) {
     // @ts-ignore
     const csv = finDF.toCSV({delimiter: '\t', includeHeader: true})
 
@@ -189,10 +192,25 @@ export class AppComponent {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a")
     a.href = url
-    a.download = "uniprot.txt"
+    a.download = filename
     document.body.appendChild(a)
     a.click();
     document.body.removeChild(a);
     window.URL.revokeObjectURL(url)
+  }
+
+  downloadGOStatsAssociation() {
+    const goStatsAssociation: {"Geneontology IDs": string, "Gocode": string, "Entry": string}[] = []
+    for (const r of this.df) {
+      r["Gene Ontology IDs"].split("; ").forEach((go: string) => {
+        goStatsAssociation.push({
+          "Geneontology IDs": go,
+          "Gocode": "IEA",
+          "Entry": r["Entry Name"]
+        })
+      })
+    }
+    const df = new DataFrame(goStatsAssociation)
+    this.triggerDownload(df, "goStatsAssociation.txt").then()
   }
 }

@@ -60,7 +60,12 @@
 </div>
 
 <div class="center">
-  <button mat-raised-button color="primary" (click)="submit()">Submit</button>
+  <div style="margin: auto">
+    <button mat-raised-button color="primary" (click)="submit()">Submit</button>
+  </div>
+  <div style="margin: auto" *ngIf="finished">
+    <button mat-raised-button color="accent" (click)="downloadGOStatsAssociation()">Get GOStats Association File</button>
+  </div>
 </div>
 <div>
   <div *ngFor="let segment of segments">
