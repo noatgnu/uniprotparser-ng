@@ -1,53 +1,76 @@
-<div class="container">
-  <div class="center">
-    <div class="middle">
-      <mat-tab-group>
-        <mat-tab label="UniProt IDs text input">
-          <form [formGroup]="form">
-            <mat-form-field style="width:100%">
-              <mat-label>UniProt Accession IDs (separated by newline)</mat-label>
-              <textarea matInput [rows]="5"></textarea>
-            </mat-form-field>
-          </form>
-        </mat-tab>
-        <mat-tab label="Upload file with only UniProt IDs">
-          <div style="display:flex; height: 200px">
-            <div style="margin:auto">
-              <form [formGroup]="form">
-                <button mat-raised-button color="primary" (click)="fileInput.click()">Upload file</button>
-                <input #fileInput
-                       type="file"
-                       (change)="onFileChange($event, false)"
-                       hidden
-                >
-              </form>
-            </div>
-          </div>
-        </mat-tab>
-        <mat-tab label="Upload file with multiple columns">
-          <div style="display:flex; height: 200px">
-            <div style="margin:auto">
-              <form [formGroup]="form">
-                <button mat-raised-button color="primary" (click)="fileInputMultiple.click()">Upload file</button>
-                <input #fileInputMultiple
-                       type="file"
-                       (change)="onFileChange($event, true)"
-                       hidden
-                >
-                <div>
-                  <mat-form-field style="width: 300px">
-                    <mat-label>Column with UniProt Accession IDs</mat-label>
-                    <mat-select>
-                      <mat-option *ngFor="let column of multiColumnFile.getColumnNames()" [value]="column">{{column}}</mat-option>
-                    </mat-select>
-                  </mat-form-field>
-                </div>
+<div style="width: 100%; display: flex; justify-content: center;">
+  <h1 class="text-gradient-pastel">UniProtParserJS</h1>
+</div>
 
-              </form>
+<div class="center">
+  <mat-tab-group (selectedIndexChange)="updateCurrentTabIndex($event)">
+    <mat-tab label="UniProt IDs text input">
+      <form [formGroup]="form">
+        <mat-form-field style="width:100%">
+          <mat-label>UniProt Accession IDs (separated by newline)</mat-label>
+          <textarea matInput [rows]="5" formControlName="text"></textarea>
+        </mat-form-field>
+      </form>
+    </mat-tab>
+    <mat-tab label="Upload file with only UniProt IDs">
+      <div style="display:flex; height: 200px">
+        <div style="margin:auto">
+          <form [formGroup]="form">
+            <button mat-raised-button color="primary" (click)="fileInput.click()">Upload file</button>
+            <input #fileInput
+                   type="file"
+                   (change)="onFileChange($event, false)"
+                   hidden
+            >
+          </form>
+        </div>
+      </div>
+    </mat-tab>
+    <mat-tab label="Upload file with multiple columns">
+      <div style="display:flex; height: 200px">
+        <div style="margin:auto">
+          <form [formGroup]="form">
+            <button mat-raised-button color="primary" (click)="fileInputMultiple.click()">Upload file</button>
+            <input #fileInputMultiple
+                   type="file"
+                   (change)="onFileChange($event, true)"
+                   hidden
+            >
+            <div>
+              <mat-form-field style="width: 300px">
+                <mat-label>Column with UniProt Accession IDs</mat-label>
+                <mat-select formControlName="column">
+                  <mat-option *ngFor="let column of multiColumnFile.getColumnNames()" [value]="column">{{column}}</mat-option>
+                </mat-select>
+              </mat-form-field>
             </div>
-          </div>
-        </mat-tab>
-      </mat-tab-group>
-    </div>
+
+          </form>
+        </div>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+  <div style="margin:50px">
+    <mat-card>
+      <mat-card-content>
+        <button mat-button color="primary" (click)="openColumnSelectionDialog()">Customize return fields</button>
+      </mat-card-content>
+    </mat-card>
   </div>
 </div>
+
+<div class="center">
+  <button mat-raised-button color="primary" (click)="submit()">Submit</button>
+</div>
+<div>
+  <div *ngFor="let segment of segments">
+    <mat-progress-bar *ngIf="this.segmentStatus[segment]"
+                      color="primary"
+                      mode="determinate"
+                      [value]="this.segmentStatus[segment].progressValue"
+    >
+
+    </mat-progress-bar>
+  </div>
+</div>
+

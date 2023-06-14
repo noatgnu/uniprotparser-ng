@@ -1,0 +1,17 @@
+<h1 mat-dialog-title>Customize return columns</h1>
+<div mat-dialog-content>
+  <div *ngFor="let section of uniprotSections">
+    <form [formGroup]="this.columnFormMap[section]">
+      <mat-form-field style="padding: 20px; width: 300px">
+        <mat-label>{{section}}</mat-label>
+        <mat-select multiple formControlName="columns">
+          <mat-option *ngFor="let o of dataMap[section]" [value]="o.fieldId">{{o.label}}</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </form>
+  </div>
+</div>
+<div mat-dialog-actions>
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-button [mat-dialog-close]="columnFormMap" cdkFocusInitial>Ok</button>
+</div>

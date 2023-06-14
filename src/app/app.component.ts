@@ -1,6 +1,10 @@
 import { Component } from '@angular/core';
-import {FormBuilder} from "@angular/forms";
-import {DataFrame, fromCSV} from "data-forge";
+import {FormBuilder, FormGroup} from "@angular/forms";
+import {DataFrame, fromCSV, IDataFrame, Series} from "data-forge";
+import {MatDialog} from "@angular/material/dialog";
+import {ColumnSelectModalComponent} from "./column-select-modal/column-select-modal.component";
+import {uniprotSections, Accession, Parser} from "uniprotparserjs";
+import {Subject} from "rxjs";
 
 @Component({
   selector: 'app-root',
@@ -9,225 +13,24 @@ import {DataFrame, fromCSV} from "data-forge";
 })
 export class AppComponent {
   title = 'uniprotparser-ng';
-  multiColumnFile = new DataFrame();
+  multiColumnFile: IDataFrame<number, any> = new DataFrame();
   form = this.fb.group({
     text: [''],
     fileSource: [''],
-    fileHasMultipleColumns: [false]
+    fileHasMultipleColumns: [false],
+    column: ["",],
   })
-
-  sections: string[] = [
-    "Names & Taxonomy",
-    "Sequences",
-    "Function",
-    "Miscellaneous",
-    "Interaction",
-    "Expression",
-    "Gene Ontology (GO)",
-    "Pathology & Biotech",
-    "Subcellular location",
-    "PTM / Processing",
-    "Structure",
-    "Publications",
-    "Date of",
-    "Family & Domains",
-    "Sequence Databases",
-    "3D Structure Databases",
-    "Protein-Protein Interaction Databases",
-    "Chemistry Databases",
-    "Protein Family/Group Databases",
-    "PTM Databases",
-    "Genetic Variation Databases",
-    "2D Gel Databases",
-    "Proteomic Databases",
-    "Protocols And Materials Databases"
-  ]
-
-  columns: {label: string, fieldId: string, section: string}[] = [
-    {label: "Entry", fieldId: "accession", section: "Names & Taxonomy"},
-    {label: "Entry name", fieldId: "id", section: "Names & Taxonomy"},
-    {label: "Gene Names", fieldId: "gene_names", section: "Names & Taxonomy"},
-    {label: "Gene Names (primary)", fieldId: "gene_primary", section: "Names & Taxonomy"},
-    {label: "Gene Names (synonym)", fieldId: "gene_synonym", section: "Names & Taxonomy"},
-    {label: "Gene Names (ordered locus)", fieldId: "gene_oln", section: "Names & Taxonomy"},
-    {label: "Gene Names (ORF)", fieldId: "gene_orf", section: "Names & Taxonomy"},
-    {label: "Organism", fieldId: "organism_name", section: "Names & Taxonomy"},
-    {label: "Organism ID", fieldId: "organism_id", section: "Names & Taxonomy"},
-    {label: "Protein names", fieldId: "protein_name", section: "Names & Taxonomy"},
-    {label: "Proteomes", fieldId: "xref_proteomes", section: "Names & Taxonomy"},
-    {label: "Taxonomic lineage", fieldId: "lineage", section: "Names & Taxonomy"},
-    {label: "Taxonomic lineage IDs", fieldId: "lineage_ids", section: "Names & Taxonomy"},
-    {label: "Virus hosts", fieldId: "virus_hosts", section: "Names & Taxonomy"},
-    {label: "Alternative products", fieldId: "cc_alternative_products", section: "Sequences"},
-    {label: "Alternative sequence", fieldId: "ft_var_seq", section: "Sequences"},
-    {label: "Erroneous gene model prediction", fieldId: "error_gmodel_pred", section: "Sequences"},
-    {label: "Fragment", fieldId: "fragment", section: "Sequences"},
-    {label: "Gene encoded by", fieldId: "organelle", section: "Sequences"},
-    {label: "Length", fieldId: "length", section: "Sequences"},
-    {label: "Mass", fieldId: "mass", section: "Sequences"},
-    {label: "Mass spectrometry", fieldId: "cc_mass_spectrometry", section: "Sequences"},
-    {label: "Natural variant", fieldId: "ft_mod_res", section: "ft_variant"},
-    {label: "Non-adjacent residues", fieldId: "ft_non_cons", section: "Sequences"},
-    {label: "Non-standard residue", fieldId: "ft_non_std", section: "Sequences"},
-    {label: "Non-terminal residue", fieldId: "ft_non_ter", section: "Sequences"},
-    {label: "Polymorphism", fieldId: "cc_polymorphism", section: "Sequences"},
-    {label: "RNA editing", fieldId: "cc_seq_caution", section: "Sequences"},
-    {label: "Sequence", fieldId: "cc_rna_editing", section: "Sequences"},
-    {label: "Sequence caution", fieldId: "cc_seq_caution", section: "Sequences"},
-    {label: "Sequence conflict", fieldId: "ft_conflict", section: "Sequences"},
-    {label: "Sequence uncertainty", fieldId: "ft_unsure", section: "Sequences"},
-    {label: "Sequence version", fieldId: "sequence_version", section: "Sequences"},
-    {label: "Absorption", fieldId: "absorption", section: "Function"},
-    {label: "Active site", fieldId: "ft_act_site", section: "Function"},
-    {label: "Activity regulation", fieldId: "cc_activity_regulation", section: "Function"},
-    {label: "Binding site", fieldId: "ft_binding", section: "Function"},
-    {label: "Catalytic activity", fieldId: "cc_catalytic_activity", section: "Function"},
-    {label: "Cofactor", fieldId: "cc_cofactor", section: "Function"},
-    {label: "DNA binding", fieldId: "ft_dna_bind", section: "Function"},
-    {label: "EC number", fieldId: "ec", section: "Function"},
-    {label: "Function [CC]", fieldId: "cc_function", section: "Function"},
-    {label: "Kinetics", fieldId: "kinetics", section: "Function"},
-    {label: "Pathway", fieldId: "cc_pathway", section: "Function"},
-    {label: "pH dependence", fieldId: "ph_dependence", section: "Function"},
-    {label: "Redox potential", fieldId: "redox_potential", section: "Function"},
-    {label: "Rhea ID", fieldId: "rhea", section: "Function"},
-    {label: "Site", fieldId: "ft_site", section: "Function"},
-    {label: "Temperature dependence", fieldId: "temp_dependence", section: "Function"},
-    {label: "Annotation", fieldId: "annotation_score", section: "Miscellaneous"},
-    {label: "Caution", fieldId: "cc_caution", section: "Miscellaneous"},
-    {label: "Comment Count", fieldId: "comment_count", section: "Miscellaneous"},
-    {label: "Features", fieldId: "feature_count", section: "Miscellaneous"},
-    {label: "Keyword ID", fieldId: "keywordid", section: "Miscellaneous"},
-    {label: "Keywords", fieldId: "keyword", section: "Miscellaneous"},
-    {label: "Miscellaneous [CC]", fieldId: "cc_miscellaneous", section: "Miscellaneous"},
-    {label: "Protein existence", fieldId: "protein_existence", section: "Miscellaneous"},
-    {label: "Reviewed", fieldId: "reviewed", section: "Miscellaneous"},
-    {label: "Tools", fieldId: "tools", section: "Miscellaneous"},
-    {label: "UniParc", fieldId: "uniparc_id", section: "Miscellaneous"},
-    {label: "Interacts with", fieldId: "cc_interaction", section: "Interaction"},
-    {label: "Subunit structure[CC]", fieldId: "cc_subunit", section: "Interaction"},
-    {label: "Developmental stage", fieldId: "cc_developmental_stage", section: "Expression"},
-    {label: "Induction", fieldId: "cc_induction", section: "Expression"},
-    {label: "Tissue specificity", fieldId: "cc_tissue_specificity", section: "Expression"},
-    {label: "Gene ontology (biological process)", fieldId: "go_p", section: "Gene Ontology (GO)"},
-    {label: "Gene ontology (cellular component)", fieldId: "go_c", section: "Gene Ontology (GO)"},
-    {label: "Gene ontology (GO)", fieldId: "go", section: "Gene Ontology (GO)"},
-    {label: "Gene ontology (molecular function)", fieldId: "go_f", section: "Gene Ontology (GO)"},
-    {label: "Gene ontology IDs", fieldId: "go_id", section: "Gene Ontology (GO)"},
-    {label: "Allergenic properties", fieldId: "cc_allergen", section: "Pathology & Biotech"},
-    {label: "Biotechnological use", fieldId: "cc_biotechnology", section: "Pathology & Biotech"},
-    {label: "Disruption phenotype", fieldId: "cc_disruption_phenotype", section: "Pathology & Biotech"},
-    {label: "Involvement in disease", fieldId: "cc_disease", section: "Pathology & Biotech"},
-    {label: "Mutagenesis", fieldId: "ft_mutagen", section: "Pathology & Biotech"},
-    {label: "Pharmaceutical use", fieldId: "cc_pharmaceutical", section: "Pathology & Biotech"},
-    {label: "Toxic dose", fieldId: "cc_toxic_dose", section: "Pathology & Biotech"},
-    {label: "Intramembrane", fieldId: "ft_intramem", section: "Subcellular location"},
-    {label: "Subcellular location[CC]", fieldId: "cc_subcellular_location", section: "Subcellular location"},
-    {label: "Topological domain", fieldId: "ft_topo_dom", section: "Subcellular location"},
-    {label: "Transmembrane", fieldId: "ft_transmem", section: "Subcellular location"},
-    {label: "Chain", fieldId: "ft_chain", section: "PTM / Processsing"},
-    {label: "Cross-link", fieldId: "ft_crosslnk", section: "PTM / Processsing"},
-    {label: "Disulfide bond", fieldId: "ft_disulfid", section: "PTM / Processsing"},
-    {label: "Glycosylation", fieldId: "ft_carbohyd", section: "PTM / Processsing"},
-    {label: "Initiator methionine", fieldId: "ft_init_met", section: "PTM / Processsing"},
-    {label: "Lipidation", fieldId: "ft_lipid", section: "PTM / Processsing"},
-    {label: "Modified residue", fieldId: "ft_mod_res", section: "PTM / Processsing"},
-    {label: "Peptide", fieldId: "ft_peptide", section: "PTM / Processsing"},
-    {label: "Post-translational modification", fieldId: "cc_ptm", section: "PTM / Processsing"},
-    {label: "Propeptide", fieldId: "ft_propep", section: "PTM / Processsing"},
-    {label: "Signal peptide", fieldId: "ft_signal", section: "PTM / Processsing"},
-    {label: "Transit peptide", fieldId: "ft_transit", section: "PTM / Processsing"},
-    {label: "3D", fieldId: "structure_3d", section: "Structure"},
-    {label: "Beta strand", fieldId: "ft_strand", section: "Structure"},
-    {label: "Helix", fieldId: "ft_helix", section: "Structure"},
-    {label: "Turn", fieldId: "ft_turn", section: "Structure"},
-    {label: "PubMed ID", fieldId: "lit_pubmed_id", section: "Publications"},
-    {label: "Date of creation", fieldId: "date_created", section: "Date of"},
-    {label: "Date of last modification", fieldId: "date_modified", section: "Date of"},
-    {label: "Date of last sequence modification", fieldId: "date_sequence_modified", section: "Date of"},
-    {label: "Entry version", fieldId: "version", section: "Date of"},
-    {label: "Coiled coil", fieldId: "ft_coiled", section: "Family & Domains"},
-    {label: "Compositional bias", fieldId: "ft_compbias", section: "Family & Domains"},
-    {label: "Domain[CC]", fieldId: "cc_domain", section: "Family & Domains"},
-    {label: "Domain[FT]", fieldId: "ft_domain", section: "Family & Domains"},
-    {label: "Motif", fieldId: "ft_motif", section: "Family & Domains"},
-    {label: "Protein families", fieldId: "protein_families", section: "Family & Domains"},
-    {label: "Region", fieldId: "ft_region", section: "Family & Domains"},
-    {label: "Repeat", fieldId: "ft_repeat", section: "Family & Domains"},
-    {label: "Zinc finger", fieldId: "ft_zn_fing", section: "Family & Domains"},
-    {label: "CCDS", fieldId: "xref_ccds", section: "Sequence Databases"},
-    {label: "EMBL", fieldId: "xref_embl", section: "Sequence Databases"},
-    {label: "PIR", fieldId: "xref_pir", section: "Sequence Databases"},
-    {label: "RefSeq", fieldId: "xref_refseq", section: "Sequence Databases"},
-    {label: "AlphaFoldDB", fieldId: "xref_alphafolddb", section: "3D Structure Databases"},
-    {label: "BMRB", fieldId: "xref_bmrb", section: "3D Structure Databases"},
-    {label: "PCDDB", fieldId: "xref_pcddb", section: "3D Structure Databases"},
-    {label: "PDB", fieldId: "xref_pdb", section: "3D Structure Databases"},
-    {label: "PDBsum", fieldId: "xref_pdbsum", section: "3D Structure Databases"},
-    {label: "SASBDB", fieldId: "xref_sasbdb", section: "3D Structure Databases"},
-    {label: "SMR", fieldId: "xref_smr", section: "3D Structure Databases"},
-    {label: "BioGRID", fieldId: "xref_biogrid", section: "Protein-Protein Interaction Databases"},
-    {label: "CORUM", fieldId: "xref_corum", section: "Protein-Protein Interaction Databases"},
-    {label: "ComplexPortal", fieldId: "xref_complexportal", section: "Protein-Protein Interaction Databases"},
-    {label: "DIP", fieldId: "xref_dip", section: "Protein-Protein Interaction Databases"},
-    {label: "ELM", fieldId: "xref_elm", section: "Protein-Protein Interaction Databases"},
-    {label: "IntAct", fieldId: "xref_intact", section: "Protein-Protein Interaction Databases"},
-    {label: "MINT", fieldId: "xref_mint", section: "Protein-Protein Interaction Databases"},
-    {label: "STRING", fieldId: "xref_string", section: "Protein-Protein Interaction Databases"},
-    {label: "BindingDB", fieldId: "xref_bindingdb", section: "Chemistry Databases"},
-    {label: "ChEMBL", fieldId: "xref_chembl", section: "Chemistry Databases"},
-    {label: "DrugBank", fieldId: "xref_drugbank", section: "Chemistry Databases"},
-    {label: "DrugCentral", fieldId: "xref_drugcentral", section: "Chemistry Databases"},
-    {label: "GuidetoPHARMACOLOGY", fieldId: "xref_guidetopharmacology", section: "Chemistry Databases"},
-    {label: "SwissLipids", fieldId: "xref_swisslipids", section: "Chemistry Databases"},
-    {label: "Allergome", fieldId: "xref_allergome", section: "Protein Family/Group Databases"},
-    {label: "CAZy", fieldId: "xref_cazy", section: "Protein Family/Group Databases"},
-    {label: "CLAE", fieldId: "xref_clae", section: "Protein Family/Group Databases"},
-    {label: "ESTHER", fieldId: "xref_esther", section: "Protein Family/Group Databases"},
-    {label: "IMGT_GENE-DB", fieldId: "xref_imgt_gene-db", section: "Protein Family/Group Databases"},
-    {label: "MEROPS", fieldId: "xref_merops", section: "Protein Family/Group Databases"},
-    {label: "MoonDB", fieldId: "xref_moondb", section: "Protein Family/Group Databases"},
-    {label: "MoonProt", fieldId: "xref_moonprot", section: "Protein Family/Group Databases"},
-    {label: "PeroxiBase", fieldId: "xref_peroxibase", section: "Protein Family/Group Databases"},
-    {label: "REBASE", fieldId: "xref_rebase", section: "Protein Family/Group Databases"},
-    {label: "TCDB", fieldId: "xref_tcdb", section: "Protein Family/Group Databases"},
-    {label: "UniLectin", fieldId: "xref_unilectin", section: "Protein Family/Group Databases"},
-    {label: "CarbonylDB", fieldId: "xref_carbonyldb", section: "PTM Databases"},
-    {label: "DEPOD", fieldId: "xref_glyconnect", section: "PTM Databases"},
-    {label: "GlyCosmos", fieldId: "xref_glycosmos", section: "PTM Databases"},
-    {label: "GlyConnect", fieldId: "xref_depod", section: "PTM Databases"},
-    {label: "GlyGen", fieldId: "xref_glygen", section: "PTM Databases"},
-    {label: "MetOSite", fieldId: "xref_metosite", section: "PTM Databases"},
-    {label: "PhosphoSitePlus", fieldId: "xref_phosphositeplus", section: "PTM Databases"},
-    {label: "SwissPalm", fieldId: "xref_swisspalm", section: "PTM Databases"},
-    {label: "iPTMnet", fieldId: "xref_iptmnet", section: "PTM Databases"},
-    {label: "BioMuta", fieldId: "xref_biomuta", section: "Genetic Variation Databases"},
-    {label: "DMDM", fieldId: "xref_dmdm", section: "Genetic Variation Databases"},
-    {label: "dbSNP", fieldId: "xref_dbsnp", section: "Genetic Variation Databases"},
-    {label: "COMPLUYEAST-2DPAGE", fieldId: "xref_compluyeast-2dpage", section: "2D Gel Databases"},
-    {label: "DOSAC-COBS-2DPAGE", fieldId: "xref_dosac-cobs-2dpage", section: "2D Gel Databases"},
-    {label: "OGP", fieldId: "xref_ogp", section: "2D Gel Databases"},
-    {label: "SWISS-2DPAGE", fieldId: "xref_swiss-2dpage", section: "2D Gel Databases"},
-    {label: "UCD-2DPAGE", fieldId: "xref_ucd-2dpage", section: "2D Gel Databases"},
-    {label: "World-2DPAGE", fieldId: "xref_world-2dpage", section: "2D Gel Databases"},
-    {label: "CPTAC", fieldId: "xref_cptac", section: "Proteomic Databases"},
-    {label: "EPD", fieldId: "xref_epd", section: "Proteomic Databases"},
-    {label: "MassIVE", fieldId: "xref_massive", section: "Proteomic Databases"},
-    {label: "MaxQB", fieldId: "xref_maxqb", section: "Proteomic Databases"},
-    {label: "PRIDE", fieldId: "xref_pride", section: "Proteomic Databases"},
-    {label: "PaxDb", fieldId: "xref_paxdb", section: "Proteomic Databases"},
-    {label: "PeptideAtlas", fieldId: "xref_peptideatlas", section: "Proteomic Databases"},
-    {label: "ProMEX", fieldId: "xref_promex", section: "Proteomic Databases"},
-    {label: "ProteomicsDB", fieldId: "xref_proteomicsdb", section: "Proteomic Databases"},
-    {label: "TopDownProteomics", fieldId: "xref_topdownproteomics", section: "Proteomic Databases"},
-    {label: "jPOST", fieldId: "xref_jpost", section: "Proteomic Databases"},
-    {label: "ABCD", fieldId: "xref_abcd", section: "Protocols And Materials Databases"},
-    {label: "Antibodypedia", fieldId: "xref_antibodypedia", section: "Protocols And Materials Databases"},
-    {label: "CPTC", fieldId: "xref_cptc", section: "Protocols And Materials Databases"},
-    {label: "DNASU", fieldId: "xref_dnasu", section: "Protocols And Materials Databases"},
-
-  ]
-  constructor(private fb: FormBuilder) {
+  currentTab = 0;
+  selectedString = 'accession,id,gene_names,protein_name,organism_name,go_id,sequence'
+  uniprotIDs: string[] = []
+  inputMap: any = {}
+  reverseInputMap: any = {}
+  segmentStatus: any = {}
+  segments: string[] = []
+  segmentCount = 0
+  progressValue = 0
+  progressText = ""
+  constructor(private fb: FormBuilder, public dialog: MatDialog) {
 
   }
 
@@ -249,6 +52,147 @@ export class AppComponent {
       reader.readAsText(file);
     }
   }
+  updateCurrentTabIndex(event: any) {
+    this.currentTab = event
+  }
+
+  openColumnSelectionDialog() {
+    const ref = this.dialog.open(ColumnSelectModalComponent, {
+      width: '500px',
+    })
+    ref.componentInstance.fieldParameters = this.selectedString.slice()
+    ref.afterClosed().subscribe(result => {
+      let selectedColumns: string[] = []
+      for (const s of uniprotSections) {
+        if (result[s]) {
+          for (const fieldId of result[s]) {
+            selectedColumns.push(fieldId)
+          }
+        }
+      }
+      this.selectedString = selectedColumns.join(',')
+    })
+  }
+
+  submit() {
+    this.uniprotIDs = []
+
+    switch (this.currentTab) {
+      case 0:
+        this.form.value.text?.replace(/\r\n/g, '\n').split('\n').forEach((line: string) => {
+          const acc = new Accession(line, true)
+          const d = acc.toString()
+          if (d !== "") {
+            this.uniprotIDs.push(d)
+          }
+
+        })
+        break
+      case 1:
+        this.form.value.text?.replace(/\r\n/g, '\n').split('\n').forEach((line: string) => {
+          const acc = new Accession(line, true)
+          const d = acc.toString()
+          if (d !== "") {
+            this.uniprotIDs.push(d)
+          }
+        })
+        break
+      case 2:
+        if (this.form.value.column) {
+          const primaryIDs: string[] = []
+          for (const s of this.multiColumnFile.getSeries(this.form.value.column)) {
+            const acc = new Accession(s, true)
+
+            if (acc.acc !== "") {
+              primaryIDs.push(acc.toString())
+              if (!this.inputMap[acc.toString()]) {
+                this.inputMap[acc.toString()] = []
+              }
+              this.inputMap[acc.toString()].push(s)
+            } else {
+              primaryIDs.push(s)
+            }
+            this.reverseInputMap[s] = acc.toString()
+            this.uniprotIDs.push(acc.toString())
+          }
+          this.multiColumnFile = this.multiColumnFile.withSeries("primaryID", new Series(primaryIDs)).bake()
+        }
+        break
+    }
+    this.segments = []
+
+    if (this.uniprotIDs.length > 0) {
+
+      // get unique values
+      this.uniprotIDs = [...new Set(this.uniprotIDs)]
+      this.segmentCount = Math.ceil(this.uniprotIDs.length/10000)
+      this.parse().then()
+    }
 
 
+  }
+
+  async parse() {
+    const parser = new Parser(5,this.selectedString)
+    const mainDF: IDataFrame[] = []
+    this.segmentStatus = {}
+    for await (const result of parser.parse(this.uniprotIDs)) {
+      const segment = `${result.segment}`
+      if (!this.segmentStatus[segment]) {
+        this.segmentStatus [segment] = {progressValue: 0, progressText: "", currentRun: 1, totalRun: Math.ceil(result.total/500), running: true}
+        this.segments.push(segment)
+      }
+
+      this.segmentStatus[segment].totalRun = Math.ceil(result.total/500)
+
+      const df = fromCSV(result.data)
+      mainDF.push(df)
+      this.segmentStatus[segment].progressValue = this.segmentStatus[segment].currentRun * 100/this.segmentStatus[segment].totalRun
+      this.segmentStatus[segment].progressText = `Processed UniProt Job ${this.segmentStatus[segment].currentRun}/${this.segmentStatus[segment].totalRun}`
+      this.segmentStatus[segment].currentRun ++
+      console.log(this.segmentStatus[segment])
+    }
+    let finDF: IDataFrame<number, any> = new DataFrame()
+    if (mainDF.length > 1) {
+      finDF = DataFrame.concat(mainDF).bake()
+    } else {
+      if (mainDF.length === 1) {
+        finDF = mainDF[0]
+      } else {
+
+      }
+    }
+    this.progressText = "Finished"
+    this.segments = []
+
+
+    if (this.currentTab === 0 || this.currentTab === 1) {
+      await this.triggerDownload(finDF)
+    } else {
+      const total = this.multiColumnFile.join(
+        finDF, left => left["primaryID"], right => right["From"], (left, right) => {
+          return {
+            ...left,
+            ...right
+          }
+        }).bake()
+      await this.triggerDownload(total)
+    }
+
+  }
+
+  async triggerDownload(finDF: IDataFrame<number, any>) {
+    // @ts-ignore
+    const csv = finDF.toCSV({delimiter: '\t', includeHeader: true})
+
+    const blob = new Blob([csv], {type: 'text/csv'})
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a")
+    a.href = url
+    a.download = "uniprot.txt"
+    document.body.appendChild(a)
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url)
+  }
 }
