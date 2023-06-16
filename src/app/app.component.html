@@ -52,8 +52,21 @@
         </div>
       </div>
     </mat-tab>
+    <mat-tab label="About">
+      <div class="copyright-footer">
+        <div style="display: flex">
+          <div>
+            <p>UniProtParserJS is developed by <a href="https://www.proteo.info" target="_blank">Toan Phung</a></p>
+            <p>UniProtParserJS is licensed under <a href="https://opensource.org/licenses/MIT" target="_blank">MIT License</a></p>
+            <p>UniProtParserJS developement is supported by <a href="https://ppu.mrc.ac.uk" target="_blank">MRC-PPU</a> and <a href="https://www.michaeljfox.org/asap">ASAP</a></p>
+            <p>UniProtParserJS is built with <a href="https://angular.io" target="_blank">Angular</a> and <a href="https://material.angular.io" target="_blank">Angular Material</a></p>
+            <p>UniProtParserJS uses public API provided by UniProt <a href="https://www.uniprot.org/help/api" target="_blank">UniProt API</a> through the <a href="https://github.com/noatgnu/uniprotparserjs">uniprotparserjs</a> Node.js package</p>
+          </div>
+        </div>
+      </div>
+    </mat-tab>
   </mat-tab-group>
-  <div style="margin:50px">
+  <div style="margin:50px" *ngIf="currentTab !== 3">
     <form [formGroup]="form" *ngIf="uniprot.uniprotFromFields">
       <mat-form-field *ngIf="uniprot.uniprotFromFields.length >0">
         <mat-label>Select ID Source</mat-label>
@@ -71,7 +84,7 @@
   </div>
 </div>
 
-<div class="center">
+<div class="center" *ngIf="currentTab !== 3">
   <div style="margin: auto">
     <button mat-raised-button color="primary" (click)="submit()">Submit</button>
   </div>
@@ -93,4 +106,8 @@
     </mat-progress-bar>
   </div>
 </div>
+
+
+
+
 
