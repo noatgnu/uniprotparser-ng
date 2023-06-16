@@ -65,7 +65,7 @@ export class AppComponent {
       let selectedColumns: string[] = []
       for (const s of uniprotSections) {
         if (result[s]) {
-          for (const fieldId of result[s]) {
+          for (const fieldId of result[s].value["columns"]) {
             selectedColumns.push(fieldId)
           }
         }
