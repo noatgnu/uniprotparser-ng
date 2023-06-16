@@ -14,6 +14,8 @@ import {MatTabsModule} from "@angular/material/tabs";
 import { ColumnSelectModalComponent } from './column-select-modal/column-select-modal.component';
 import {MatDialogModule} from "@angular/material/dialog";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
+import {MatToolbarModule} from "@angular/material/toolbar";
+import {MatSlideToggleModule} from "@angular/material/slide-toggle";
 
 @NgModule({
   declarations: [
@@ -32,7 +34,9 @@ import {MatProgressBarModule} from "@angular/material/progress-bar";
     MatSelectModule,
     MatTabsModule,
     MatDialogModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    MatToolbarModule,
+    MatSlideToggleModule
   ],
   providers: [],
   bootstrap: [AppComponent]

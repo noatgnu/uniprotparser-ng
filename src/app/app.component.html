@@ -1,18 +1,21 @@
+<mat-toolbar>
+  <div style="flex: 1 auto"></div>
+</mat-toolbar>
 <div style="width: 100%; display: flex; justify-content: center;">
   <h1 class="text-gradient-pastel">UniProtParserJS</h1>
 </div>
 
 <div class="center">
   <mat-tab-group (selectedIndexChange)="updateCurrentTabIndex($event)">
-    <mat-tab label="UniProt IDs text input">
+    <mat-tab label="ACC IDs text input">
       <form [formGroup]="form">
         <mat-form-field style="width:100%">
-          <mat-label>UniProt Accession IDs (separated by newline)</mat-label>
+          <mat-label>ACC IDs (separated by newline)</mat-label>
           <textarea matInput [rows]="5" formControlName="text"></textarea>
         </mat-form-field>
       </form>
     </mat-tab>
-    <mat-tab label="Upload file with only UniProt IDs">
+    <mat-tab label="Upload file with only ACC IDs">
       <div style="display:flex; height: 200px">
         <div style="margin:auto">
           <form [formGroup]="form">
@@ -38,7 +41,7 @@
             >
             <div>
               <mat-form-field style="width: 300px">
-                <mat-label>Column with UniProt Accession IDs</mat-label>
+                <mat-label>Column with ACC IDs</mat-label>
                 <mat-select formControlName="column">
                   <mat-option *ngFor="let column of multiColumnFile.getColumnNames()" [value]="column">{{column}}</mat-option>
                 </mat-select>
@@ -51,11 +54,20 @@
     </mat-tab>
   </mat-tab-group>
   <div style="margin:50px">
-    <mat-card>
-      <mat-card-content>
-        <button mat-button color="primary" (click)="openColumnSelectionDialog()">Customize return fields</button>
-      </mat-card-content>
-    </mat-card>
+    <form [formGroup]="form" *ngIf="uniprot.uniprotFromFields">
+      <mat-form-field *ngIf="uniprot.uniprotFromFields.length >0">
+        <mat-label>Select ID Source</mat-label>
+        <mat-select formControlName="from">
+          <mat-optgroup *ngFor="let group of uniprot.uniprotFromFields" [label]="group.groupName">
+            <mat-option *ngFor="let item of group.items" [value]="item.name">{{item.displayName}}</mat-option>
+          </mat-optgroup>
+        </mat-select>
+      </mat-form-field>
+    </form>
+    <button mat-raised-button color="primary" (click)="openColumnSelectionDialog()">Customize return fields</button>
+  </div>
+  <div *ngIf="!finished">
+    <mat-progress-bar color="warn" mode="indeterminate"></mat-progress-bar>
   </div>
 </div>
 
@@ -63,16 +75,19 @@
   <div style="margin: auto">
     <button mat-raised-button color="primary" (click)="submit()">Submit</button>
   </div>
+  <div style="margin: auto" *ngIf="df.count() > 0">
+    <button mat-raised-button color="primary" (click)="download()">Download</button>
+  </div>
   <div style="margin: auto" *ngIf="finished">
     <button mat-raised-button color="accent" (click)="downloadGOStatsAssociation()">Get GOStats Association File</button>
   </div>
 </div>
 <div>
-  <div *ngFor="let segment of segments">
-    <mat-progress-bar *ngIf="this.segmentStatus[segment]"
+  <div *ngFor="let segment of uniprot.segments">
+    <mat-progress-bar *ngIf="uniprot.segmentStatus[segment]"
                       color="primary"
                       mode="determinate"
-                      [value]="this.segmentStatus[segment].progressValue"
+                      [value]="uniprot.segmentStatus[segment].progressValue"
     >
 
     </mat-progress-bar>
