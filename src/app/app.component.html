@@ -15,11 +15,11 @@
         </mat-form-field>
       </form>
     </mat-tab>
-    <mat-tab label="Upload file with only ACC IDs">
+    <mat-tab label="Import file with only ACC IDs">
       <div style="display:flex; height: 200px">
         <div style="margin:auto">
           <form [formGroup]="form">
-            <button mat-raised-button color="primary" (click)="fileInput.click()">Upload file</button>
+            <button mat-raised-button color="primary" (click)="fileInput.click()">Import file</button>
             <input #fileInput
                    type="file"
                    (change)="onFileChange($event, false)"
@@ -29,11 +29,11 @@
         </div>
       </div>
     </mat-tab>
-    <mat-tab label="Upload file with multiple columns">
+    <mat-tab label="Import file with multiple columns">
       <div style="display:flex; height: 200px">
         <div style="margin:auto">
           <form [formGroup]="form">
-            <button mat-raised-button color="primary" (click)="fileInputMultiple.click()">Upload file</button>
+            <button mat-raised-button color="primary" (click)="fileInputMultiple.click()">Import file</button>
             <input #fileInputMultiple
                    type="file"
                    (change)="onFileChange($event, true)"
@@ -86,7 +86,7 @@
 
 <div class="center" *ngIf="currentTab !== 3">
   <div style="margin: auto">
-    <button mat-raised-button color="primary" (click)="submit()">Submit</button>
+    <button mat-raised-button color="primary" (click)="submit()">Start</button>
   </div>
   <div style="margin: auto" *ngIf="df.count() > 0">
     <button mat-raised-button color="primary" (click)="download()">Download</button>
