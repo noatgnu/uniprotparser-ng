@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import {Parser, getUniprotFromFields} from "uniprotparserjs";
 import {DataFrame, fromCSV, IDataFrame} from "data-forge";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 @Injectable({
   providedIn: 'root'
@@ -13,7 +14,7 @@ export class UniprotService {
   progressText = ""
   df: IDataFrame<number, any> = new DataFrame()
   uniprotFromFields: any = {}
-  constructor() {
+  constructor(private snack: MatSnackBar) {
     getUniprotFromFields().then((res: any) => {
       this.uniprotFromFields = res
       console.log(this.uniprotFromFields)
@@ -39,6 +40,7 @@ export class UniprotService {
       this.segmentStatus[segment].progressValue = this.segmentStatus[segment].currentRun * 100/this.segmentStatus[segment].totalRun
       this.segmentStatus[segment].progressText = `Processed UniProt Job ${this.segmentStatus[segment].currentRun}/${this.segmentStatus[segment].totalRun}`
       this.segmentStatus[segment].currentRun ++
+      this.snack.open(`Processed UniProt Job Segment ${segment} (${this.segmentStatus[segment].currentRun}/${this.segmentStatus[segment].totalRun})`, "OK", {duration: 2000})
     }
     let finDF: IDataFrame<number, any> = new DataFrame()
     if (mainDF.length > 1) {

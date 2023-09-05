@@ -16,6 +16,7 @@ import {MatDialogModule} from "@angular/material/dialog";
 import {MatProgressBarModule} from "@angular/material/progress-bar";
 import {MatToolbarModule} from "@angular/material/toolbar";
 import {MatSlideToggleModule} from "@angular/material/slide-toggle";
+import {MatSnackBarModule} from "@angular/material/snack-bar";
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import {MatSlideToggleModule} from "@angular/material/slide-toggle";
     MatDialogModule,
     MatProgressBarModule,
     MatToolbarModule,
-    MatSlideToggleModule
+    MatSlideToggleModule,
+    MatSnackBarModule
   ],
   providers: [],
   bootstrap: [AppComponent]

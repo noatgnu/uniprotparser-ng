@@ -6,6 +6,7 @@ import {ColumnSelectModalComponent} from "./column-select-modal/column-select-mo
 import {uniprotSections, Accession, Parser} from "uniprotparserjs";
 import {Subject} from "rxjs";
 import {UniprotService} from "./services/uniprot.service";
+import {MatSnackBar} from "@angular/material/snack-bar";
 
 @Component({
   selector: 'app-root',
@@ -30,7 +31,7 @@ export class AppComponent {
 
   finished = false
   df: IDataFrame<number, any> = new DataFrame()
-  constructor(private fb: FormBuilder, public dialog: MatDialog, public uniprot: UniprotService) {
+  constructor(private fb: FormBuilder, public dialog: MatDialog, public uniprot: UniprotService, private snack: MatSnackBar) {
 
   }
 
@@ -48,6 +49,7 @@ export class AppComponent {
             text: <string>loadedFile
           });
         }
+        this.snack.open("File loaded", "OK", {duration: 2000})
       }
       reader.readAsText(file);
     }
@@ -92,7 +94,6 @@ export class AppComponent {
             if (d !== "") {
               this.uniprotIDs.push(d)
             }
-
           })
           break
         case 1:
@@ -131,9 +132,8 @@ export class AppComponent {
           }
           break
       }
+      this.snack.open(`${this.uniprotIDs.length} UniProt Accession IDs`, "OK", {duration: 2000})
     }
-
-
 
     if (this.uniprotIDs.length > 0) {
 
@@ -141,7 +141,7 @@ export class AppComponent {
       this.uniprotIDs = [...new Set(this.uniprotIDs)]
       this.uniprot.segmentCount = Math.ceil(this.uniprotIDs.length/10000)
       if (this.form.value["from"]) {
-
+        this.snack.open(`Submitting request to UniProt`, "OK", {duration: 2000})
         this.uniprot.parse(this.uniprotIDs, this.selectedString, this.form.value["from"]).then(async () => {
           if (this.currentTab === 0 || this.currentTab === 1) {
             this.finished = true
@@ -161,10 +161,7 @@ export class AppComponent {
           }
         })
       }
-
     }
-
-
   }
 
 
