@@ -141,8 +141,13 @@ export class AppComponent {
       this.uniprotIDs = [...new Set(this.uniprotIDs)]
       this.uniprot.segmentCount = Math.ceil(this.uniprotIDs.length/10000)
       if (this.form.value["from"]) {
-        this.snack.open(`Submitting request to UniProt`, "OK", {duration: 2000})
+        const ref = this.snack.open(`Submitting request to UniProt. This may take some time.`, "OK", {duration:0})
+        let snackOpen: boolean = true
         this.uniprot.parse(this.uniprotIDs, this.selectedString, this.form.value["from"]).then(async () => {
+          if (snackOpen) {
+            snackOpen = false
+            ref.dismiss()
+          }
           if (this.currentTab === 0 || this.currentTab === 1) {
             this.finished = true
             this.df = this.uniprot.df
