@@ -86,7 +86,12 @@ export class AppComponent {
             let d = ""
             if (this.accCompatibleList.includes(<string>this.form.value["from"])) {
               const acc = new Accession(line, true)
-              d = acc.toString()
+              if (acc.acc !== "") {
+                d = acc.toString()
+              } else {
+                d = line
+              }
+
             } else {
               d = line
             }
@@ -101,7 +106,11 @@ export class AppComponent {
             let d = ""
             if (this.accCompatibleList.includes(<string>this.form.value["from"])) {
               const acc = new Accession(line, true)
-              d = acc.toString()
+              if (acc.acc !== "") {
+                d = acc.toString()
+              } else {
+                d = line
+              }
             } else {
               d = line
             }
