@@ -26,7 +26,7 @@ export class UniprotService {
     const parser = new Parser(5,columnString,"tsv", false, from)
     const mainDF: IDataFrame[] = []
     this.segmentStatus = {}
-    for await (const result of parser.parse(ids)) {
+    for await (const result of parser.parse(ids, 500)) {
       const segment = `${result.segment}`
       if (!this.segmentStatus[segment]) {
         this.segmentStatus [segment] = {progressValue: 0, progressText: "", currentRun: 1, totalRun: Math.ceil(result.total/500), running: true}
