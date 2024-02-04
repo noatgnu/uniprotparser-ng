@@ -167,14 +167,14 @@ export class AppComponent {
             for (const r of this.uniprot.df) {
               uniprotMap[r["From"]] = r
             }
-            for (const s of this.multiColumnFile.getSeries("primaryID")) {
+            for (const s of this.multiColumnFile) {
               const row: any = {}
               for (const c of this.multiColumnFile.getColumnNames()) {
                 row[c] = s[c]
               }
-              if (uniprotMap[s]) {
+              if (uniprotMap[s['primaryID']]) {
                 for (const c of this.uniprot.df.getColumnNames()) {
-                  row[c] = uniprotMap[s][c]
+                  row[c] = uniprotMap[s['primaryID']][c]
                 }
               } else {
                 for (const c of this.uniprot.df.getColumnNames()) {
