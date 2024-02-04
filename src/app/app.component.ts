@@ -170,6 +170,12 @@ export class AppComponent {
             for (const s of this.multiColumnFile.getSeries("primaryID")) {
               if (uniprotMap[s]) {
                 uniprotDF.push(uniprotMap[s])
+              } else {
+                const empty: any = {}
+                for (const c of this.uniprot.df.getColumnNames()) {
+                  empty[c] = ""
+                }
+                uniprotDF.push(empty)
               }
             }
             const total = this.multiColumnFile.concat(new DataFrame(uniprotDF)).bake()
