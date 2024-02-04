@@ -162,23 +162,28 @@ export class AppComponent {
             this.df = this.uniprot.df
             await this.triggerDownload(this.df)
           } else {
-            const uniprotDF: any[] = []
+            const finDF: any[] = []
             const uniprotMap: any = {}
             for (const r of this.uniprot.df) {
               uniprotMap[r["From"]] = r
             }
             for (const s of this.multiColumnFile.getSeries("primaryID")) {
-              if (uniprotMap[s]) {
-                uniprotDF.push(uniprotMap[s])
-              } else {
-                const empty: any = {}
-                for (const c of this.uniprot.df.getColumnNames()) {
-                  empty[c] = ""
-                }
-                uniprotDF.push(empty)
+              const row: any = {}
+              for (const c of this.multiColumnFile.getColumnNames()) {
+                row[c] = s[c]
               }
+              if (uniprotMap[s]) {
+                for (const c of this.uniprot.df.getColumnNames()) {
+                  row[c] = uniprotMap[s][c]
+                }
+              } else {
+                for (const c of this.uniprot.df.getColumnNames()) {
+                  row[c] = ""
+                }
+              }
+              finDF.push(row)
             }
-            const total = this.multiColumnFile.concat(new DataFrame(uniprotDF)).bake()
+            const total = new DataFrame(finDF)
             /*const total = this.multiColumnFile.join(
               this.uniprot.df, left => left["primaryID"], right => right["From"], (left, right) => {
                 return {
