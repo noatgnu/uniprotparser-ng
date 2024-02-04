@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
 import {FormBuilder, FormGroup} from "@angular/forms";
 import {DataFrame, fromCSV, IDataFrame, Series} from "data-forge";
-import {MatDialog} from "@angular/material/dialog";
+import {MatLegacyDialog as MatDialog} from "@angular/material/legacy-dialog";
 import {ColumnSelectModalComponent} from "./column-select-modal/column-select-modal.component";
 import {uniprotSections, Accession, Parser} from "uniprotparserjs";
 import {Subject} from "rxjs";
 import {UniprotService} from "./services/uniprot.service";
-import {MatSnackBar} from "@angular/material/snack-bar";
+import {MatLegacySnackBar as MatSnackBar} from "@angular/material/legacy-snack-bar";
 
 @Component({
   selector: 'app-root',
