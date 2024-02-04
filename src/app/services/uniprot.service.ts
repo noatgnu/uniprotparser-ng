@@ -17,7 +17,6 @@ export class UniprotService {
   constructor(private snack: MatSnackBar) {
     getUniprotFromFields().then((res: any) => {
       this.uniprotFromFields = res
-      console.log(this.uniprotFromFields)
     })
   }
 
